@@ -30,7 +30,7 @@ public class MandelbrotRx {
 
     public static void main(String[] args) {
 
-        logger.info("open window");
+        //logger.info("open window");
         new MandelbrotRx()
                 .computeMandelbrot()
                 .paintMandelbrot();
@@ -45,7 +45,7 @@ public class MandelbrotRx {
 
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent windowEvent){
-                logger.info("closing window");
+                //logger.info("closing window");
                 System.exit(0);
             }
         });
@@ -69,8 +69,7 @@ public class MandelbrotRx {
                 continue;
             }
             else {
-                logger.info("find a point to draw: {}", pt);
-                //points.onNext(com.pedro.mandelbrot.Point.drawingPoint(pt.getA(), pt.getB(), computeColor(y, x)));
+                //logger.info("find a point to draw: {}", pt);
                 return com.pedro.mandelbrot.Point.drawingPoint(pt.getA(), pt.getB(), computeColor(y, x));
             }
         }

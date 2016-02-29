@@ -43,7 +43,7 @@ public class MandelbrotCanvasWithSubject extends Canvas {
                 .subscribe(
                     pt -> {
                         if (pt != null) {
-                            logger.info("paint {}", pt);
+                            //logger.info("paint {}", pt);
                             g2.setColor(pt.getC());
                             g2.drawRect(a2x(pt.getA()), b2y(pt.getB()), 1, 1);
                         }
