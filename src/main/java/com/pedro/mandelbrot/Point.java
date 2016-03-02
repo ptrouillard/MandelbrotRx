@@ -39,6 +39,11 @@ public class Point {
         return c;
     }
 
+    public Point withColor(Color c) {
+        this.c = c;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "Point{" +

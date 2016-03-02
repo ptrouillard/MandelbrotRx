@@ -10,7 +10,7 @@ public class MandelbrotColorizer {
     public static Color computeColor(double y, double x) {
         if (x==0.0)
             return Color.BLACK;
-        double c = y/x;
-        return new Color((int)(c*15000), false);
+        double c = Math.abs(y/x) * 12000;
+        return new Color((int)c, false);
     }
 }

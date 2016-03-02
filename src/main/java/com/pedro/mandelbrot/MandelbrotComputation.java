@@ -11,6 +11,6 @@ public class MandelbrotComputation {
      * @return
      */
     public static boolean inMandelbrotSet(double x, double y) {
-        return x*x + y*y > 5.0;
+        return x*x + y*y > 4.0;
     }
 }

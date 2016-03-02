@@ -1,20 +1,22 @@
 package com.pedro.mandelbrot.impl;
 
-import com.pedro.mandelbrot.MandelbrotCanvasWithSubject;
+import com.pedro.mandelbrot.MandelbrotCanvas;
+import com.pedro.mandelbrot.MandelbrotScaler;
 import com.pedro.mandelbrot.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.subjects.BehaviorSubject;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.pedro.mandelbrot.MandelbrotColorizer.computeColor;
 import static com.pedro.mandelbrot.MandelbrotComputation.inMandelbrotSet;
 import static com.pedro.mandelbrot.MandelbrotData.*;
-import static com.pedro.mandelbrot.MandelbrotScaler.x2a;
-import static com.pedro.mandelbrot.MandelbrotScaler.y2b;
 import static com.pedro.mandelbrot.Point.computePoint;
 import static rx.subjects.BehaviorSubject.*;
 
@@ -22,32 +24,76 @@ import static rx.subjects.BehaviorSubject.*;
 /**
  * Created by pierre on 28/02/2016.
  */
-public class MandelbrotRx {
+public class MandelbrotRx implements Supplier<Observable<Point>> {
 
-    public static Observable<Point> points = null;
+    private MandelbrotCanvas canvas = null;
+
+    public MandelbrotScaler scaler = null;
 
     public static Logger logger = LoggerFactory.getLogger(MandelbrotRx.class);
 
     public static void main(String[] args) {
 
-        //logger.info("open window");
         new MandelbrotRx()
-                .computeMandelbrot()
                 .paintMandelbrot();
     }
 
+    private MandelbrotRx() {
+        scaler = MandelbrotScaler.get();
+        canvas = new MandelbrotCanvas(this, scaler);
+    }
+
     public MandelbrotRx paintMandelbrot() {
+
         JFrame frame = new JFrame();
         frame.setSize(CANVAS_WIDTH, CANVAS_HEIGHT+25);
-        MandelbrotCanvasWithSubject canvas = new MandelbrotCanvasWithSubject(points);
 
         frame.getContentPane().add(canvas);
 
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // resize
+                Dimension size = e.getComponent().getSize();
+                int newWidth = size.width;
+                int newHeight = size.height-25;
+                logger.info("newWidth={}, newHeight={}", newWidth, newHeight);
+                scaler.withCanvasSize(newWidth, newHeight);
+            }
+        });
         frame.addWindowListener(new WindowAdapter() {
+
             public void windowClosing(WindowEvent windowEvent){
-                //logger.info("closing window");
                 System.exit(0);
             }
+        });
+
+        canvas.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                java.awt.Point locationOnScreen = e.getPoint();
+                scaler.center(locationOnScreen.x, locationOnScreen.y);
+                canvas.repaint();
+            }
+        });
+
+
+        BehaviorSubject<MouseWheelEvent> mouseWheelEvents = create();
+        frame.addMouseWheelListener(e ->  {
+            mouseWheelEvents.onNext(e);
+
+        });
+
+        // observer mouse wheel events
+        mouseWheelEvents
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .subscribe(e -> {
+            if (e.getWheelRotation() > 0)
+                scaler.zoom();
+            else
+                scaler.unzoom();
+            canvas.repaint();
         });
 
         frame.setVisible(true);
@@ -70,22 +116,19 @@ public class MandelbrotRx {
             }
             else {
                 //logger.info("find a point to draw: {}", pt);
-                return com.pedro.mandelbrot.Point.drawingPoint(pt.getA(), pt.getB(), computeColor(y, x));
+                return pt.withColor(computeColor(y, x));
             }
         }
-
-        return null;
+        return pt;
     }
 
-    public MandelbrotRx computeMandelbrot() {
-
+    @Override
+    public Observable<Point> get() {
         //  génère l'ensemble des couples de points (a,b)
         // en partant de la liste des pixels (range de int)
-        points = range(1, CANVAS_WIDTH * CANVAS_HEIGHT)
-                .map(n -> computePoint(x2a(n / CANVAS_HEIGHT), y2b(n % CANVAS_HEIGHT)))
+        Observable<Point> points = range(1, scaler.getCanvasWidth() * scaler.getCanvasHeight())
+                .map(n -> computePoint(scaler.XtoA(n / scaler.getCanvasHeight()), scaler.YtoB(n % scaler.getCanvasHeight())))
                 .map(pt -> mandelbrot(pt)); // calcule mandelbrot pour cette série de points
-
-        return this;
+        return points;
     }
-
 }
