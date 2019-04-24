@@ -8,7 +8,7 @@ public abstract class MandelbrotData {
     /**
      * Nombre d'itérations maximum avant de considérer le point comme n'appartenant pas à l'ensemble de MandelbrotSingleThread
      */
-    public static int N_MAX = 12;
+    public static int N_MAX = 100;
 
     /**
      * Taille du canvas

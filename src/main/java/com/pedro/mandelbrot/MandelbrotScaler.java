@@ -16,10 +16,6 @@ public class MandelbrotScaler {
 
     private double aMin = 0d, aMax = 0d, bMin = 0d, bMax = 0d;
     private int canvasWidth = 0, canvasHeight = 0;
-    private int xMin = 0;
-    private int xMax = 0;
-    private int yMin = 0;
-    private int yMax = 0;
     private Point centerXY = Point.computePoint(0,0);
 
     private static MandelbrotScaler _instance;
@@ -47,11 +43,11 @@ public class MandelbrotScaler {
     }
 
     private double scaleXtoA() {
-        return (aMax - aMin) / (xMax - xMin);
+        return (aMax - aMin) / canvasWidth;
     }
 
     private double scaleYtoB() {
-        return (bMax - bMin) / (yMax - yMin);
+        return (bMax - bMin) / canvasHeight;
     }
 
     public double XtoA(int x) {
@@ -71,12 +67,18 @@ public class MandelbrotScaler {
     }
 
     public MandelbrotScaler center(int x, int y) {
-
         this.centerXY = Point.drawingPoint(x,y, Color.WHITE);
-        this.xMin = 0;
-        this.yMin = 0;
-        this.xMax = canvasWidth;
-        this.yMax = canvasHeight;
+
+        double centerA = XtoA((int)this.centerXY.getA());
+        double centerB = YtoB((int)this.centerXY.getB());
+
+        double aWidth = aMax - aMin;
+        double bHeight = bMax - bMin;
+
+        this.aMin = centerA - aWidth / 2;
+        this.aMax = centerA + aWidth / 2;
+        this.bMin = centerB - bHeight / 2;
+        this.bMax = centerB + bHeight / 2;
         return this;
     }
 
